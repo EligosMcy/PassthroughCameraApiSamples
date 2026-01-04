@@ -1,0 +1,175 @@
+{
+    "version": 1,
+    "name": "Player",
+    "maps": [
+        {
+            "name": "Camera",
+            "id": "ae44bd71-f399-4b75-889d-dc98c6a66b56",
+            "actions": [
+                {
+                    "name": "Left Axis",
+                    "type": "Value",
+                    "id": "d70d07ea-451d-484b-abee-25435dfb1d3c",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Left Axis Button",
+                    "type": "Button",
+                    "id": "61b683fc-459d-43b5-97ee-d59531e8d65a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Left Primarily Button",
+                    "type": "Button",
+                    "id": "89940eba-2a0a-45c6-b08b-34547441359f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Left Secondary Button",
+                    "type": "Button",
+                    "id": "bca8955c-2921-4bdc-b5be-581318372c6f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Right Axis",
+                    "type": "Value",
+                    "id": "fcc2a6d0-8391-4700-b1d1-9af7bca6a7cb",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Right Axis Button",
+                    "type": "Button",
+                    "id": "db9a2ac4-f3b7-42a0-a644-4fc36365a9be",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Right Primarily Button",
+                    "type": "Button",
+                    "id": "6cabeec0-3c0b-41b2-b35f-27c496a0408c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Right Secondary Button",
+                    "type": "Button",
+                    "id": "d5e0ab35-26cf-4ac4-b933-a1ff25a6b808",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "53775961-cb23-4210-a780-399199f29866",
+                    "path": "<XRController>{LeftHand}/{Primary2DAxis}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left Axis",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e84d2da2-0678-4abd-aef7-ec4f90482704",
+                    "path": "<XRController>{RightHand}/{Primary2DAxis}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right Axis",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6f0a312c-c0ad-4933-880f-3767e70af25a",
+                    "path": "<XRController>{RightHand}/{Primary2DAxisClick}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right Axis Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1b09d6ed-22d4-4514-b7ac-f63ce1499a00",
+                    "path": "<XRController>{LeftHand}/{Primary2DAxisClick}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left Axis Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "26705d37-934b-4d28-ad2c-d374679968b5",
+                    "path": "<XRController>{RightHand}/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right Primarily Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "59806558-a07a-4286-8bdd-e4470da6a17a",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right Secondary Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bfca3bd8-e7b3-4465-a0f0-93ea72e1d919",
+                    "path": "<XRController>{LeftHand}/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left Primarily Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "179d5dee-e4be-43bc-a820-b98719e9e1c4",
+                    "path": "<XRController>{LeftHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left Secondary Button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

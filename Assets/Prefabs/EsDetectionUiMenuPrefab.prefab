@@ -908,7 +908,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4351475cbc1b6694598e5b37bd1b6b58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_actionButton: 1
   m_loadingPanel: {fileID: 5096354491628878223}
   m_initialPanel: {fileID: 291031894992353958}
   m_noPermissionPanel: {fileID: 6568552954314693856}
@@ -929,6 +928,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _inputActionProperty:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Input Action Property
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: cbf36c13-e26a-4952-a363-82d762527fa6
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
 --- !u!1 &2333553872372897471
 GameObject:
   m_ObjectHideFlags: 0

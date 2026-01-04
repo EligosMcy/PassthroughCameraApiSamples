@@ -15,7 +15,10 @@ namespace MultiObjectDetection
         [SerializeField] private PassthroughCameraAccess m_cameraAccess;
 
         [SerializeField]
-        private RectTransform m_detectionBoxPrefab;
+        private Transform _contentParent;
+
+        public Transform ContentParent => _contentParent;
+
         [SerializeField]
         private EsDetectionCanvasMaker m_canvasMaker;
 
@@ -37,8 +40,6 @@ namespace MultiObjectDetection
             public float lastUpdateTime;
             public Vector2 Size;
         }
-
-        private void Awake() => m_detectionBoxPrefab.gameObject.SetActive(false);
 
         private void Update()
         {
@@ -138,9 +139,6 @@ namespace MultiObjectDetection
                 boxRectTransform.SetPositionAndRotation(worldSpaceCenter, Quaternion.LookRotation(normal));
                 boxRectTransform.sizeDelta = size;
 
-                var canvasMaker = boxData.CanvasMaker.CanvasMakerRectTransform;
-                canvasMaker.SetPositionAndRotation(worldSpaceCenter, Quaternion.LookRotation(normal));
-                canvasMaker.sizeDelta = size;
                 //
                 // === 新增：截取识别区域的纹理 ===
                 if (cameraTexture != null)
@@ -268,13 +266,13 @@ namespace MultiObjectDetection
             {
                 var pooled = m_boxPool[m_boxPool.Count - 1];
                 pooled.BoxRectTransform.gameObject.SetActive(true);
-                pooled.CanvasMaker.gameObject.SetActive(true);
                 m_boxPool.RemoveAt(m_boxPool.Count - 1);
                 return pooled;
             }
 
-            var boxRectTransform = Instantiate(m_detectionBoxPrefab, ContentParent);
-            var canvasMaker = Instantiate(m_canvasMaker, ContentParent);
+            var canvasMaker = Instantiate(m_canvasMaker, _contentParent);
+            var boxRectTransform = canvasMaker.CanvasMakerRectTransform;
+
 
             boxRectTransform.gameObject.SetActive(true);
             return new BoundingBoxData
@@ -284,12 +282,11 @@ namespace MultiObjectDetection
             };
         }
 
-        internal Transform ContentParent => m_detectionBoxPrefab.parent;
+
 
         private void ReturnToPool(BoundingBoxData box)
         {
             box.BoxRectTransform.gameObject.SetActive(false);
-            box.CanvasMaker.gameObject.SetActive(false);
             m_boxPool.Add(box);
         }
 

@@ -278,8 +278,8 @@ namespace CameraToWorld
                     CameraMarkerData = new MarkerData(_cameraMarker.transform),
                     CanvasMarkerData = new MarkerData(_cameraCanvas.transform),
                     HeadMarkerData = new MarkerData(_headMarker.transform),
-                    Extrinsic = exportExtrinsic(),
-                    Intrinsic = exportIntrinsic(),
+                    Extrinsic = exportExtrinsicByPassthroughCameraAccess(),
+                    Intrinsic = exportIntrinsicByPassthroughCameraAccess(),
                 };
 
                 //
@@ -413,6 +413,33 @@ namespace CameraToWorld
             }
         }
 
+        private Extrinsic exportExtrinsicByPassthroughCameraAccess()
+        {
+            // ===== 2) Pose -> 4x4 W2C =====
+            // GetCameraPose() is camera pose in world space at pca.Timestamp
+            Pose camPoseWorld = _cameraAccess.GetCameraPose();
+
+            // Unity TRS gives Camera-to-World (C2W)
+            Matrix4x4 C2W = Matrix4x4.TRS(camPoseWorld.position, camPoseWorld.rotation, Vector3.one);
+
+            // Invert to get World-to-Camera (W2C)
+            Matrix4x4 W2C = C2W.inverse;
+
+            // Optional coordinate conversion: flip Z axis (common when exporting to right-handed CV pipelines)
+            Matrix4x4 flipZ = Matrix4x4.identity;
+            flipZ[2, 2] = -1f;
+            Matrix4x4 w2Ce = flipZ * W2C;
+
+            Extrinsic exportExtrinsic = new Extrinsic
+            {
+                MainExtrinsicMatrix = w2Ce,
+                MainWorldToMatrix = W2C,
+            };
+
+            return exportExtrinsic;
+        }
+
+
         private Extrinsic exportExtrinsic()
         {
             Matrix4x4 mainWorldToCamera = _mainCamera.worldToCameraMatrix;
@@ -451,6 +478,28 @@ namespace CameraToWorld
             };
 
             return exportExtrinsic;
+        }
+
+        private Intrinsic exportIntrinsicByPassthroughCameraAccess()
+        {
+            var cameraAccessIntrinsics = _cameraAccess.Intrinsics;
+
+            float fx = cameraAccessIntrinsics.FocalLength.x;
+            float fy = cameraAccessIntrinsics.FocalLength.y;
+            float cx = cameraAccessIntrinsics.PrincipalPoint.x;
+            float cy = cameraAccessIntrinsics.PrincipalPoint.y;
+
+            Matrix4x4 intrinsicMatrix4X4 = Matrix4x4.zero;
+
+            intrinsicMatrix4X4[0, 0] = fx; // fx
+            intrinsicMatrix4X4[1, 1] = fy; // fy
+            intrinsicMatrix4X4[0, 2] = cx; // cx
+            intrinsicMatrix4X4[1, 2] = cy; // cy
+            intrinsicMatrix4X4[2, 2] = 1;  // 缩放因子
+
+            Intrinsic intrinsic = new Intrinsic { IntrinsicsMatrix = intrinsicMatrix4X4 };
+
+            return intrinsic;
         }
 
         private Intrinsic exportIntrinsic()

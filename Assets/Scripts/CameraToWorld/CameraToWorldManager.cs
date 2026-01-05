@@ -20,8 +20,6 @@ namespace CameraToWorld
 
         [SerializeField] private GameObject _cameraMarker;
 
-        [SerializeField] private GameObject _floorMarker;
-
         [SerializeField]
         private GameObject _rayGo1, _rayGo2, _rayGo3, _rayGo4;
 
@@ -35,13 +33,6 @@ namespace CameraToWorld
 
         [SerializeField]
         private bool _isDebugOn;
-
-        [Space(20)]
-        [SerializeField]
-        private MRUK _mruk;
-
-        [SerializeField]
-        private bool _getFloorAnchor;
 
         [Space(20)]
         [SerializeField]
@@ -107,8 +98,6 @@ namespace CameraToWorld
 
             _resetOffsetInputActionProperty.action.performed += resetOffset;
 
-            _mruk.SceneLoadedEvent.AddListener(findFloorAnchor);
-
             StartCoroutine(nameof(cameraInitCoroutine));
 
         }
@@ -116,27 +105,6 @@ namespace CameraToWorld
         private void resetOffset(InputAction.CallbackContext obj)
         {
             _canvasOffset = Vector3.zero;
-        }
-
-        private void findFloorAnchor()
-        {
-            MRUKRoom mrukRoom = _mruk.GetCurrentRoom();
-
-            if (mrukRoom.FloorAnchors.Count <= 0)
-            {
-                _getFloorAnchor = false;
-
-                Debug.LogError("Floor Anchors is Null");
-            }
-            else
-            {
-                Debug.Log($"Floor Anchors Count: {mrukRoom.FloorAnchors.Count}");
-
-                _getFloorAnchor = true;
-                _floorAnchor = mrukRoom.FloorAnchors[0];
-                _floorMarker.transform.SetParent(_floorAnchor.transform);
-                _floorMarker.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            }
         }
 
         private IEnumerator cameraInitCoroutine()
@@ -227,7 +195,7 @@ namespace CameraToWorld
 
             _canvasOffset.y = Mathf.Clamp(_canvasOffset.y, _offsetMinFloat, _offsetMaxFloat);
 
-            _textMesh.text = y + " / " + _canvasDistance + " / " + _canvasOffset;
+            _textMesh.text = y + " / " + _canvasDistance + " / " + _canvasOffset + exportIntrinsicByPassthroughCameraAccess() + " / " + exportExtrinsicByPassthroughCameraAccess();
         }
 
         private void updateToolTip()
@@ -342,6 +310,47 @@ namespace CameraToWorld
                 _cameraCanvas.StartResumeStreamingFromCamera();
                 updateRaysRendering();
             }
+        }
+
+
+        private Matrix4x4 exportExtrinsicByPassthroughCameraAccess()
+        {
+            // ===== 2) Pose -> 4x4 W2C =====
+            // GetCameraPose() is camera pose in world space at pca.Timestamp
+            Pose camPoseWorld = _cameraAccess.GetCameraPose();
+
+            // Unity TRS gives Camera-to-World (C2W)
+            Matrix4x4 C2W = Matrix4x4.TRS(camPoseWorld.position, camPoseWorld.rotation, Vector3.one);
+
+            // Invert to get World-to-Camera (W2C)
+            Matrix4x4 W2C = C2W.inverse;
+
+            // Optional coordinate conversion: flip Z axis (common when exporting to right-handed CV pipelines)
+            Matrix4x4 flipZ = Matrix4x4.identity;
+            flipZ[2, 2] = -1f;
+            Matrix4x4 w2Ce = flipZ * W2C;
+
+            return w2Ce;
+        }
+
+        private Matrix4x4 exportIntrinsicByPassthroughCameraAccess()
+        {
+            var cameraAccessIntrinsics = _cameraAccess.Intrinsics;
+
+            float fx = cameraAccessIntrinsics.FocalLength.x;
+            float fy = cameraAccessIntrinsics.FocalLength.y;
+            float cx = cameraAccessIntrinsics.PrincipalPoint.x;
+            float cy = cameraAccessIntrinsics.PrincipalPoint.y;
+
+            Matrix4x4 intrinsicMatrix4X4 = Matrix4x4.zero;
+
+            intrinsicMatrix4X4[0, 0] = fx; // fx
+            intrinsicMatrix4X4[1, 1] = fy; // fy
+            intrinsicMatrix4X4[0, 2] = cx; // cx
+            intrinsicMatrix4X4[1, 2] = cy; // cy
+            intrinsicMatrix4X4[2, 2] = 1;  // 缩放因子
+
+            return intrinsicMatrix4X4;
         }
 
     }

@@ -65,11 +65,17 @@ namespace CameraToWorld
     [Serializable]
     public class Extrinsic
     {
-        public Matrix4x4 ExtrinsicMatrix;
+        public Matrix4x4 MainExtrinsicMatrix;
+        public Matrix4x4 LeftExtrinsicMatrix;
+        public Matrix4x4 RightExtrinsicMatrix;
 
-        public Matrix4x4 WorldToMatrix;
+        public Matrix4x4 MainWorldToMatrix;
+        public Matrix4x4 LeftWorldToMatrix;
+        public Matrix4x4 RightWorldToMatrix;
 
         public Matrix4x4 WorldToLocalMatrix;
+
+        public Matrix4x4 LocalToWorldMatrix;
     }
 
     [Serializable]

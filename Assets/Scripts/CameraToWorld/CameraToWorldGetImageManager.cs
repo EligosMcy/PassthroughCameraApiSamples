@@ -23,6 +23,8 @@ namespace CameraToWorld
         [SerializeField] private GameObject _floorMarker;
 
         [SerializeField] private Camera _mainCamera;
+        [SerializeField] private Camera _leftCamera;
+        [SerializeField] private Camera _rightCamera;
 
         [SerializeField]
         private GameObject _rayGo1, _rayGo2, _rayGo3, _rayGo4;
@@ -413,9 +415,16 @@ namespace CameraToWorld
 
         private Extrinsic exportExtrinsic()
         {
-            Matrix4x4 worldToCamera = _mainCamera.worldToCameraMatrix;
+            Matrix4x4 mainWorldToCamera = _mainCamera.worldToCameraMatrix;
 
-            Matrix4x4 worldToLocalCamera = _mainCamera.transform.worldToLocalMatrix;
+            Matrix4x4 leftWorldToCamera = _leftCamera.worldToCameraMatrix;
+
+            Matrix4x4 rightWorldToCamera = _rightCamera.worldToCameraMatrix;
+
+            //
+            Matrix4x4 worldToLocalCamera = _cameraCanvas.transform.worldToLocalMatrix;
+
+            Matrix4x4 localToWorldCamera = _cameraCanvas.transform.localToWorldMatrix;
 
             //
             Matrix4x4 cvAdjust = Matrix4x4.identity;
@@ -423,13 +432,22 @@ namespace CameraToWorld
             cvAdjust[1, 1] = -1;
             cvAdjust[2, 2] = -1;
 
-            Matrix4x4 extrinsicMatrix4X4 = cvAdjust * worldToCamera;
+            Matrix4x4 mainExtrinsicMatrix4X4 = cvAdjust * mainWorldToCamera;
+            Matrix4x4 leftExtrinsicMatrix4X4 = cvAdjust * leftWorldToCamera;
+            Matrix4x4 rightExtrinsicMatrix4X4 = cvAdjust * rightWorldToCamera;
 
             Extrinsic exportExtrinsic = new Extrinsic
             {
-                ExtrinsicMatrix = extrinsicMatrix4X4,
-                WorldToMatrix = worldToCamera,
+                MainExtrinsicMatrix = mainExtrinsicMatrix4X4,
+                LeftExtrinsicMatrix = leftExtrinsicMatrix4X4,
+                RightExtrinsicMatrix = rightExtrinsicMatrix4X4,
+
+                MainWorldToMatrix = mainWorldToCamera,
+                LeftWorldToMatrix = leftWorldToCamera,
+                RightWorldToMatrix = rightWorldToCamera,
+
                 WorldToLocalMatrix = worldToLocalCamera,
+                LocalToWorldMatrix = localToWorldCamera,
             };
 
             return exportExtrinsic;
@@ -437,24 +455,46 @@ namespace CameraToWorld
 
         private Intrinsic exportIntrinsic()
         {
-            int width = _mainCamera.pixelWidth;
-            int height = _mainCamera.pixelHeight;
-            float fovVertical = _mainCamera.fieldOfView * Mathf.Deg2Rad; // 转为弧度
+            int width = 1280;
+            int height = 960;
+
             float aspect = (float)width / height;
 
-            float fy = height / (2 * Mathf.Tan(fovVertical / 2));
-            float fx = fy * aspect;
-            float cx = width / 2.0f;
-            float cy = height / 2.0f;
+            float physicalHeight = height * 0.001f;
 
-            Matrix4x4 intrinsicMatrix4X4 = Matrix4x4.zero;
-            intrinsicMatrix4X4[0, 0] = fx; // fx
-            intrinsicMatrix4X4[1, 1] = fy; // fy
-            intrinsicMatrix4X4[0, 2] = cx; // cx
-            intrinsicMatrix4X4[1, 2] = cy; // cy
-            intrinsicMatrix4X4[2, 2] = 1;  // 缩放因子
+            float halfHeight = physicalHeight / 2f;
+
+            float fov = 2 * Mathf.Atan(halfHeight) * Mathf.Rad2Deg;
+
+            Matrix4x4 intrinsicMatrix4X4 = calculatePerspectiveIntrinsic(fov, width, height);
 
             Intrinsic intrinsic = new Intrinsic { IntrinsicsMatrix = intrinsicMatrix4X4 };
+
+            return intrinsic;
+        }
+
+        private Matrix4x4 calculatePerspectiveIntrinsic(float fovVertical, int width = 1280, int height = 960)
+        {
+            float aspect = (float)width / height;
+
+            // 步骤1：转换FOV为弧度
+            float fovRad = fovVertical * Mathf.Deg2Rad;
+            // 步骤2：计算fy（像素焦距）
+            float fy = (height / 2f) / Mathf.Tan(fovRad / 2f);
+            // 步骤3：计算fx（宽高比匹配，fx=fy）
+            float fx = fy * aspect; // 若宽高比不匹配，fx = fy * (width / height)
+            // 步骤4：主点
+            float cx = width / 2f;
+            float cy = height / 2f;
+
+            // 构建内参矩阵（3x3，Unity用4x4存储，最后一行/列补0,0,0,1）
+            Matrix4x4 intrinsic = Matrix4x4.zero;
+            intrinsic[0, 0] = fx; // fx
+            intrinsic[1, 1] = fy; // fy
+            intrinsic[0, 2] = cx; // cx
+            intrinsic[1, 2] = cy; // cy
+            intrinsic[2, 2] = 1;  // 缩放因子
+            // 其余元素默认0/1，无需修改
 
             return intrinsic;
         }

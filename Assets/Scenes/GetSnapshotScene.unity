@@ -2263,6 +2263,8 @@ MonoBehaviour:
   _cameraMarker: {fileID: 1958581239648509449}
   _floorMarker: {fileID: 886660215}
   _mainCamera: {fileID: 1848740389}
+  _leftCamera: {fileID: 1494685905}
+  _rightCamera: {fileID: 308588198}
   _rayGo1: {fileID: 3164311033808954212}
   _rayGo2: {fileID: 1558085252}
   _rayGo3: {fileID: 2111445760}

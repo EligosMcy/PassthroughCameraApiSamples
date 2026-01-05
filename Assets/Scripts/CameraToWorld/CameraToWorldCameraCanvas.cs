@@ -65,7 +65,6 @@ namespace CameraToWorld
         }
 
 
-
         private IEnumerator startCameraCanvas()
         {
             _debugText.text = "No permission granted.";

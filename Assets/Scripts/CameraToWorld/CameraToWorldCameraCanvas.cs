@@ -15,6 +15,10 @@ namespace CameraToWorld
 
         public Texture2D CameraSnapshot => _cameraSnapshot;
 
+        private Texture _cameraTexture;
+
+        public Texture CameraTexture => _cameraTexture;
+
 
         private void Start()
         {
@@ -35,7 +39,11 @@ namespace CameraToWorld
                 _cameraSnapshot = new Texture2D(size.x, size.y, TextureFormat.RGBA32, false);
             }
 
+            _cameraAccess.GetTexture();
             var pixels = _cameraAccess.GetColors();
+
+            _cameraTexture = _cameraAccess.GetTexture();
+
             _cameraSnapshot.LoadRawTextureData(pixels);
             _cameraSnapshot.Apply();
 

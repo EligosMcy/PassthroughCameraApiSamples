@@ -43,8 +43,6 @@ namespace CameraToWorld
         [SerializeField]
         private bool _getFloorAnchor;
 
-
-
         [Space(20)]
         [SerializeField]
         private InputActionProperty _startSnapshotInputActionProperty;
@@ -263,6 +261,10 @@ namespace CameraToWorld
             m_snapshotTaken = !m_snapshotTaken;
             if (m_snapshotTaken)
             {
+                Extrinsic extrinsic = exportExtrinsicByPassthroughCameraAccess();
+                Intrinsic intrinsic = exportIntrinsicByPassthroughCameraAccess();
+                MarkerData passthroughMarkerData = getPassthroughCameraMarkerData();
+
                 // Asking the canvas to make a snapshot before stopping the camera access
                 _cameraCanvas.MakeCameraSnapshot();
                 m_snapshotHeadPose = _centerEyeAnchor.transform.ToOVRPose();
@@ -274,12 +276,15 @@ namespace CameraToWorld
                 var snapshotData = new SnapshotData
                 {
                     SnapshotTexture = textureBytes,
+                    TextureSize = new Vector2Int(_cameraCanvas.CameraTexture.width, _cameraCanvas.CameraTexture.height),
+                    SnapshotSize = new Vector2Int(_cameraCanvas.CameraSnapshot.width, _cameraCanvas.CameraSnapshot.height),
                     FloorMarkerData = new MarkerData(_floorMarker.transform),
                     CameraMarkerData = new MarkerData(_cameraMarker.transform),
                     CanvasMarkerData = new MarkerData(_cameraCanvas.transform),
                     HeadMarkerData = new MarkerData(_headMarker.transform),
-                    Extrinsic = exportExtrinsicByPassthroughCameraAccess(),
-                    Intrinsic = exportIntrinsicByPassthroughCameraAccess(),
+                    PassthroughCameraData = passthroughMarkerData,
+                    Extrinsic = extrinsic,
+                    Intrinsic = intrinsic,
                 };
 
                 //
@@ -411,6 +416,15 @@ namespace CameraToWorld
                 _cameraCanvas.StartResumeStreamingFromCamera();
                 updateRaysRendering();
             }
+        }
+
+        private MarkerData getPassthroughCameraMarkerData()
+        {
+            Pose camPoseWorld = _cameraAccess.GetCameraPose();
+
+            MarkerData markerData = new MarkerData(camPoseWorld.position, camPoseWorld.rotation);
+
+            return markerData;
         }
 
         private Extrinsic exportExtrinsicByPassthroughCameraAccess()

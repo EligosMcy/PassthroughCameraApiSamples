@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace CameraToWorld
@@ -16,11 +15,16 @@ namespace CameraToWorld
     {
         public byte[] SnapshotTexture;
 
+        public Vector2Int TextureSize;
+        public Vector2Int SnapshotSize;
+
         public MarkerData FloorMarkerData;
 
         public MarkerData HeadMarkerData;
 
         public MarkerData CameraMarkerData;
+
+        public MarkerData PassthroughCameraData;
 
         public MarkerData CanvasMarkerData;
 

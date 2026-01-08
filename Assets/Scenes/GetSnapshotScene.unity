@@ -2341,14 +2341,17 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -754962700863075682, guid: 0a48e04df3cc7994d99a846408f3e2fc, type: 3}
-  _imageCount: 20
   _countTextMesh: {fileID: 1423069752}
+  _snapshotWaitImage: {fileID: 485986958}
+  _maxImageCount: 40
+  _minImageCount: 5
+  _defaultImageCount: 20
+  _imageCount: 20
   _snapshotTime: 0.1
   _snapshotWaitTime: 0.5
-  _snapshotChangeTime: 0.5
-  _snapshotMaxTime: 2
+  _snapshotChangeTime: 1
+  _snapshotMaxTime: 3
   _snapshotMinTime: 0.1
-  _snapshotWaitImage: {fileID: 485986958}
 --- !u!1 &340539805
 GameObject:
   m_ObjectHideFlags: 0

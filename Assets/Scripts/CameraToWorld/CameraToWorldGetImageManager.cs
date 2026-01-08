@@ -59,20 +59,30 @@ namespace CameraToWorld
         [SerializeField]
         private InputActionProperty _changeSnapshotWaitTimeInputActionProperty;
 
-        private readonly int _maxImageCount = 40;
+        [Space]
+        [SerializeField]
+        private TextMesh _countTextMesh;
 
-        private readonly int _minImageCount = 10;
+        [SerializeField]
+        private Image _snapshotWaitImage;
 
-        private readonly int _defaultImageCount = 30;
+        [Space]
+        [Range(10, 100)]
+        [SerializeField]
+        private int _maxImageCount = 40;
+        [Range(1, 20)]
+        [SerializeField]
+        private int _minImageCount = 10;
+
+        [Range(10, 100)]
+        [SerializeField]
+        private int _defaultImageCount = 30;
 
         [SerializeField]
         [Range(10, 40)]
         private int _imageCount = 10;
 
-        [SerializeField]
-        private TextMesh _countTextMesh;
-
-
+        [Space]
         [SerializeField]
         [Range(0, 10f)]
         private float _snapshotTime = 0.2f;
@@ -82,19 +92,16 @@ namespace CameraToWorld
         private float _snapshotWaitTime = 0.2f;
 
         [SerializeField]
-        [Range(0, 1)]
+        [Range(0, 2)]
         private float _snapshotChangeTime = 0.1f;
 
-        [Range(0, 2)]
+        [Range(0, 10)]
         [SerializeField]
         private float _snapshotMaxTime = 1;
 
-        [Range(0, 0.5f)]
+        [Range(0, 1f)]
         [SerializeField]
         private float _snapshotMinTime = 0.1f;
-
-        [SerializeField]
-        private Image _snapshotWaitImage;
 
         //
         private bool m_snapshotTaken;
@@ -103,7 +110,7 @@ namespace CameraToWorld
 
         private OVRPose m_snapshotHeadPose;
 
-        public delegate void SnapshotTakenDataAddEvent(SnapshotData snapshotData);
+        public delegate void SnapshotTakenDataAddEvent(SnapshotData snapshotData, int maxCount);
 
         public event SnapshotTakenDataAddEvent OnSnapshotTakenDataAdded;
 
@@ -124,7 +131,6 @@ namespace CameraToWorld
             _startSnapshotInputActionProperty.action.Enable();
 
             _startSnapshotInputActionProperty.action.performed += startSnapshot;
-
 
             //
             _resetSnapshotMaxCountInputActionProperty.action.Enable();
@@ -288,7 +294,7 @@ namespace CameraToWorld
                 };
 
                 //
-                OnSnapshotTakenDataAdded?.Invoke(snapshotData);
+                OnSnapshotTakenDataAdded?.Invoke(snapshotData, _imageCount);
             }
             else
             {

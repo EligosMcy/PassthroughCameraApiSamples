@@ -70,9 +70,11 @@ namespace CameraToWorld
         }
 
 
-        private void _cameraToWorldManager_OnSnapshotTakenDataAdded(SnapshotData snapshotData)
+        private void _cameraToWorldManager_OnSnapshotTakenDataAdded(SnapshotData snapshotData, int maxCount)
         {
             int count = _snapshots.SnapshotDatas.Count;
+
+            int digits = maxCount.ToString().Length;
 
             // Define the save path
 
@@ -89,7 +91,7 @@ namespace CameraToWorld
             }
 
             // Write the bytes to a file
-            File.WriteAllBytes(dirPath + "SavedImage" + count + ".png", snapshotData.SnapshotTexture);
+            File.WriteAllBytes(dirPath + "SavedImage" + count.ToString("D" + digits) + ".png", snapshotData.SnapshotTexture);
 
             Debug.Log("Image saved to: " + dirPath);
 

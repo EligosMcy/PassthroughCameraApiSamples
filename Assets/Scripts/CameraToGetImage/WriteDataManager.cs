@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using Scripts.Utility;
+using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-namespace CameraToWorld
+namespace CameraToGetImage
 {
     public class WriteDataManager : MonoBehaviour
     {
         [Space]
-        [SerializeField] private CameraToWorldGetImageManager _cameraToWorldManager;
+        [SerializeField] private CameraGetImageManager _cameraManager;
 
         [SerializeField]
         private SnapshotDataList _snapshots = new SnapshotDataList();
@@ -29,19 +29,19 @@ namespace CameraToWorld
 
         private void Start()
         {
-            _cameraToWorldManager.OnSnapshotTakenDataStarted += _cameraToWorldManager_OnSnapshotTakenDataStarted;
+            _cameraManager.OnSnapshotTakenDataStarted += cameraManagerOnSnapshotTakenDataStarted;
 
-            _cameraToWorldManager.OnSnapshotTakenDataAdded += _cameraToWorldManager_OnSnapshotTakenDataAdded;
+            _cameraManager.OnSnapshotTakenDataAdded += cameraManagerOnSnapshotTakenDataAdded;
 
-            _cameraToWorldManager.OnSnapshotTakenDataCompleted += _cameraToWorldManager_OnSnapshotTakenDataCompleted;
+            _cameraManager.OnSnapshotTakenDataCompleted += cameraManagerOnSnapshotTakenDataCompleted;
         }
 
-        private void _cameraToWorldManager_OnSnapshotTakenDataCompleted()
+        private void cameraManagerOnSnapshotTakenDataCompleted(int maxCount)
         {
-            writeData();
+            writeData(maxCount);
         }
 
-        private void _cameraToWorldManager_OnSnapshotTakenDataStarted()
+        private void cameraManagerOnSnapshotTakenDataStarted()
         {
             _createTimeStr = DateTime.Now.ToString("HH_mm_ss");
 
@@ -69,41 +69,49 @@ namespace CameraToWorld
             }
         }
 
-
-        private void _cameraToWorldManager_OnSnapshotTakenDataAdded(SnapshotData snapshotData, int maxCount)
+        private void cameraManagerOnSnapshotTakenDataAdded(SnapshotData snapshotData)
         {
-            int count = _snapshots.SnapshotDatas.Count;
+            _snapshots.SnapshotDatas.Add(snapshotData);
+
+            _textMesh.text = "Count: / " + _snapshots.SnapshotDatas.Count;
+        }
+
+        //
+        private async void writeData(int maxCount)
+        {
+            List<Task> tasks = new List<Task>();
+
+            //
+            int count = 0;
 
             int digits = maxCount.ToString().Length;
 
-            // Define the save path
-
+            foreach (SnapshotData snapshotData in _snapshots.SnapshotDatas)
+            {
+                // Define the save path
 #if UNITY_EDITOR
-            string dirPath = Application.dataPath + _dirPath;
+                string dirPath = Application.dataPath + _dirPath;
 #else
             string dirPath = Application.persistentDataPath + _dirPath;
 #endif
 
-            // Ensure the directory exists
-            if (!Directory.Exists(dirPath))
-            {
-                Directory.CreateDirectory(dirPath);
+                // Ensure the directory exists
+                if (!Directory.Exists(dirPath))
+                {
+                    Directory.CreateDirectory(dirPath);
+                }
+
+                // Write the bytes to a file
+                await File.WriteAllBytesAsync(dirPath + "SavedImage" + count.ToString("D" + digits) + ".png", snapshotData.SnapshotTexture);
+
+                Debug.Log("Image saved to: " + dirPath);
+
+                snapshotData.SnapshotTexture = null;
+
+                count++;
             }
 
-            // Write the bytes to a file
-            File.WriteAllBytes(dirPath + "SavedImage" + count.ToString("D" + digits) + ".png", snapshotData.SnapshotTexture);
-
-            Debug.Log("Image saved to: " + dirPath);
-
-            _textMesh.text = "Count: / " + count;
-
-            snapshotData.SnapshotTexture = null;
-
-            _snapshots.SnapshotDatas.Add(snapshotData);
-        }
-
-        private void writeData()
-        {
+            //Write Json
             string fileString = JsonUtility.ToJson(_snapshots);
 
 #if UNITY_EDITOR
@@ -113,11 +121,11 @@ namespace CameraToWorld
 #endif
             TextWriter textWriter = new StreamWriter(filepath, false);
 
-            textWriter.WriteLine(fileString);
+            await textWriter.WriteLineAsync(fileString);
 
             textWriter.Close();
 
-            _textMesh.text = "Write File Count: " + _snapshots.SnapshotDatas.Count + " / " + fileString.Length;
+            _textMesh.text = "Write File Completed / Count: " + _snapshots.SnapshotDatas.Count + " / " + fileString.Length;
         }
     }
 }

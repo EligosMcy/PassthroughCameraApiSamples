@@ -8,7 +8,6 @@ namespace CameraToWorld
     public class CameraToWorldCameraCanvas : MonoBehaviour
     {
         [SerializeField] private PassthroughCameraAccess _cameraAccess;
-        [SerializeField] private Text _debugText;
         [SerializeField] private RawImage _image;
 
         private Texture2D _cameraSnapshot;
@@ -75,12 +74,10 @@ namespace CameraToWorld
 
         private IEnumerator startCameraCanvas()
         {
-            _debugText.text = "No permission granted.";
             while (!OVRPermissionsRequester.IsPermissionGranted(OVRPermissionsRequester.Permission.PassthroughCameraAccess))
             {
                 yield return null;
             }
-            _debugText.text = "Permission granted.";
 
             while (!_cameraAccess.IsPlaying)
             {
@@ -89,6 +86,5 @@ namespace CameraToWorld
 
             StartResumeStreamingFromCamera();
         }
-
     }
 }

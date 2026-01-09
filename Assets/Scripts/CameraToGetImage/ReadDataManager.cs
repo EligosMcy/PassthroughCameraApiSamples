@@ -2,7 +2,7 @@
 using Scripts.Utility;
 using UnityEngine;
 
-namespace CameraToWorld
+namespace CameraToGetImage
 {
     public class ReadDataManager : MonoBehaviour
     {

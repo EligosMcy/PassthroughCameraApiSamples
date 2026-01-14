@@ -89,7 +89,7 @@ namespace CameraToGetImage
 
         public event SnapshotTakenDataStartEvent OnSnapshotTakenDataStarted;
 
-        public delegate void SnapshotTakenDataCompletedEvent(int maxCount);
+        public delegate void SnapshotTakenDataCompletedEvent();
 
         public event SnapshotTakenDataCompletedEvent OnSnapshotTakenDataCompleted;
 
@@ -263,7 +263,7 @@ namespace CameraToGetImage
                 yield return StartCoroutine(snapshotTakenWait());
             }
 
-            OnSnapshotTakenDataCompleted?.Invoke(_imageCount);
+            OnSnapshotTakenDataCompleted?.Invoke();
         }
 
         private IEnumerator snapshotAnyQuantityImage()
@@ -279,7 +279,7 @@ namespace CameraToGetImage
                 yield return StartCoroutine(snapshotTakenWait());
             }
 
-            OnSnapshotTakenDataCompleted?.Invoke(_imageCount);
+            OnSnapshotTakenDataCompleted?.Invoke();
         }
 
         private IEnumerator snapshotTakenWait()

@@ -18,7 +18,7 @@ namespace CameraToGetImage
 
         [SerializeField] private GameObject m_tooltip;
 
-        [SerializeField] private TextMesh _textMesh;
+        [SerializeField] private TextMesh _writeCountTextMesh;
 
         private string _createTimeStr;
         private string _dirPath;
@@ -36,16 +36,16 @@ namespace CameraToGetImage
             _cameraManager.OnSnapshotTakenDataCompleted += cameraManagerOnSnapshotTakenDataCompleted;
         }
 
-        private void cameraManagerOnSnapshotTakenDataCompleted(int maxCount)
+        private void cameraManagerOnSnapshotTakenDataCompleted()
         {
-            writeData(maxCount);
+            writeData();
         }
 
         private void cameraManagerOnSnapshotTakenDataStarted()
         {
             _createTimeStr = DateTime.Now.ToString("HH_mm_ss");
 
-            _textMesh.text = $"Start Snapshot / {_createTimeStr}";
+            _writeCountTextMesh.text = $"Start Snapshot / {_createTimeStr}";
 
             _dirPath = $"/{_createTimeStr}_SavedImages/";
 
@@ -73,18 +73,18 @@ namespace CameraToGetImage
         {
             _snapshots.SnapshotDatas.Add(snapshotData);
 
-            _textMesh.text = "Count: / " + _snapshots.SnapshotDatas.Count;
+            _writeCountTextMesh.text = "Count: / " + _snapshots.SnapshotDatas.Count;
         }
 
         //
-        private async void writeData(int maxCount)
+        private async void writeData()
         {
             List<Task> tasks = new List<Task>();
 
             //
             int count = 0;
 
-            int digits = maxCount.ToString().Length;
+            int digits = _snapshots.SnapshotDatas.Count.ToString().Length;
 
             foreach (SnapshotData snapshotData in _snapshots.SnapshotDatas)
             {
@@ -125,7 +125,7 @@ namespace CameraToGetImage
 
             textWriter.Close();
 
-            _textMesh.text = "Write File Completed / Count: " + _snapshots.SnapshotDatas.Count + " / " + fileString.Length;
+            _writeCountTextMesh.text = "Write File Completed / Count: " + _snapshots.SnapshotDatas.Count + " / " + fileString.Length;
         }
     }
 }

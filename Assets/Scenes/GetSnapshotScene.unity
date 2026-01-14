@@ -14900,7 +14900,7 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -754962700863075682, guid: 0a48e04df3cc7994d99a846408f3e2fc, type: 3}
-  _maxImageCount: 100
+  _maxImageCount: 500
   _minImageCount: 1
   _defaultImageCount: 30
   _imageCount: 10

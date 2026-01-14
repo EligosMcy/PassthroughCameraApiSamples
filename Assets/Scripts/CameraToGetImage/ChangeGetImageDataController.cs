@@ -19,7 +19,7 @@ namespace CameraToGetImage
         [SerializeField] private InputActionProperty _changeSnapshotWaitTimeInputActionProperty;
 
         [Space]
-        [Range(10, 100)]
+        [Range(10, 1000)]
         [SerializeField]
         private int _maxImageCount = 40;
 

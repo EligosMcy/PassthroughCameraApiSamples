@@ -8,6 +8,8 @@ namespace CameraToGetImage
     {
         [SerializeField] private CameraGetImageManager _cameraGetImageManager;
 
+        [SerializeField] private InputActionProperty _changeSnapshotModeInputActionProperty;
+
         [SerializeField] private InputActionProperty _addSnapshotMaxCountInputActionProperty;
 
         [SerializeField] private InputActionProperty _subSnapshotMaxCountInputActionProperty;
@@ -21,11 +23,14 @@ namespace CameraToGetImage
         [SerializeField]
         private int _maxImageCount = 40;
 
-        [Range(1, 20)][SerializeField] private int _minImageCount = 10;
+        [Range(1, 20)]
+        [SerializeField] private int _minImageCount = 10;
 
-        [Range(10, 100)][SerializeField] private int _defaultImageCount = 30;
+        [Range(10, 100)]
+        [SerializeField] private int _defaultImageCount = 30;
 
-        [SerializeField][Range(10, 40)] private int _imageCount = 10;
+        [Range(10, 40)]
+        [SerializeField] private int _imageCount = 10;
 
         [Space]
         [SerializeField]
@@ -37,6 +42,9 @@ namespace CameraToGetImage
         [Range(0, 10)][SerializeField] private float _snapshotMaxTime = 1;
 
         [Range(0, 1f)][SerializeField] private float _snapshotMinTime = 0.1f;
+
+        [SerializeField]
+        private SnapshotModeEnum _snapshotModeEnum;
 
 
         private void Start()
@@ -58,8 +66,37 @@ namespace CameraToGetImage
             _changeSnapshotWaitTimeInputActionProperty.action.Enable();
             _changeSnapshotWaitTimeInputActionProperty.action.performed += changeSnapshotWaitTime;
 
+            _changeSnapshotModeInputActionProperty.action.Enable();
+            _changeSnapshotModeInputActionProperty.action.performed += changeSnapshotMode;
+
             _imageCount = _defaultImageCount;
             _cameraGetImageManager.SetImageCount(_imageCount);
+
+            _cameraGetImageManager.SetSnapshotWaitTime(_snapshotWaitTime);
+
+            _cameraGetImageManager.SetSnapshotMode(_snapshotModeEnum);
+        }
+
+        private void changeSnapshotMode(InputAction.CallbackContext obj)
+        {
+            var nextSnapshotModeEnum = SnapshotModeEnum.None;
+
+            switch (_snapshotModeEnum)
+            {
+                case SnapshotModeEnum.None:
+                    nextSnapshotModeEnum = SnapshotModeEnum.AnyQuantityImage;
+                    break;
+                case SnapshotModeEnum.AnyQuantityImage:
+                    nextSnapshotModeEnum = SnapshotModeEnum.FixedQuantityImage;
+                    break;
+                case SnapshotModeEnum.FixedQuantityImage:
+                    nextSnapshotModeEnum = SnapshotModeEnum.AnyQuantityImage;
+                    break;
+            }
+
+            _snapshotModeEnum = nextSnapshotModeEnum;
+
+            _cameraGetImageManager.SetSnapshotMode(_snapshotModeEnum);
         }
 
         private void changeSnapshotWaitTime(InputAction.CallbackContext obj)

@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections;
+using CameraToWorld;
 using Meta.XR;
 using Meta.XR.MRUtilityKit;
-using PassthroughCameraSamples.CameraToWorld;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using CameraToWorldCameraCanvas = CameraToWorld.CameraToWorldCameraCanvas;
-using CameraToWorldManager = CameraToWorld.CameraToWorldManager;
 
 namespace CameraToGetImage
 {
+    public enum SnapshotModeEnum
+    {
+        None,
+        AnyQuantityImage,
+        FixedQuantityImage,
+    }
+
     public class CameraGetImageManager : MonoBehaviour
     {
         [SerializeField] private PassthroughCameraAccess _cameraAccess;
@@ -51,6 +56,9 @@ namespace CameraToGetImage
         [SerializeField]
         private Image _snapshotWaitImage;
 
+        [SerializeField]
+        private SnapshotModeEnum _snapshotModeEnum;
+
         [Space]
         [SerializeField]
         [Range(10, 40)]
@@ -65,6 +73,8 @@ namespace CameraToGetImage
         private float _snapshotWaitTime = 0.2f;
 
         //
+        private bool _startAnyQuantity;
+
         private bool m_snapshotTaken;
 
         private MRUKAnchor _floorAnchor;
@@ -106,6 +116,12 @@ namespace CameraToGetImage
             updateCountText();
         }
 
+        public void SetSnapshotMode(SnapshotModeEnum snapshotModeEnum)
+        {
+            _snapshotModeEnum = snapshotModeEnum;
+            updateCountText();
+        }
+
         public void SetSnapshotWaitTime(float snapshotWaitTime)
         {
             _snapshotWaitTime = snapshotWaitTime;
@@ -114,12 +130,32 @@ namespace CameraToGetImage
 
         private void updateCountText()
         {
-            _countTextMesh.text = $"Count: {_imageCount} / WaitTime: {_snapshotWaitTime}";
+            int count = _snapshotModeEnum == SnapshotModeEnum.FixedQuantityImage ? _imageCount : -1;
+
+            _countTextMesh.text = $"SnapshotMode: {_snapshotModeEnum} / Count: {count} / WaitTime: {_snapshotWaitTime}";
         }
 
         private void startSnapshot(InputAction.CallbackContext obj)
         {
-            StartCoroutine(nameof(snapshotTakenGetImage));
+            switch (_snapshotModeEnum)
+            {
+                case SnapshotModeEnum.None:
+                    break;
+                case SnapshotModeEnum.AnyQuantityImage:
+                    if (_startAnyQuantity)
+                    {
+                        _startAnyQuantity = false;
+                    }
+                    else
+                    {
+                        _startAnyQuantity = true;
+                        StartCoroutine(nameof(snapshotAnyQuantityImage));
+                    }
+                    break;
+                case SnapshotModeEnum.FixedQuantityImage:
+                    StartCoroutine(nameof(snapshotFixedQuantityImage));
+                    break;
+            }
         }
 
         private void findFloorAnchor()
@@ -214,11 +250,27 @@ namespace CameraToGetImage
             updateRaysRendering();
         }
 
-        private IEnumerator snapshotTakenGetImage()
+        private IEnumerator snapshotFixedQuantityImage()
         {
             OnSnapshotTakenDataStarted?.Invoke();
 
             for (int i = 0; i < _imageCount; i++)
+            {
+                snapshotTaken();
+                yield return new WaitForSeconds(_snapshotTime);
+                _snapshotWaitImage.fillAmount = 1;
+                snapshotTaken();
+                yield return StartCoroutine(snapshotTakenWait());
+            }
+
+            OnSnapshotTakenDataCompleted?.Invoke(_imageCount);
+        }
+
+        private IEnumerator snapshotAnyQuantityImage()
+        {
+            OnSnapshotTakenDataStarted?.Invoke();
+
+            while (_startAnyQuantity)
             {
                 snapshotTaken();
                 yield return new WaitForSeconds(_snapshotTime);
@@ -266,7 +318,7 @@ namespace CameraToGetImage
             // when rays' origins are too close to the headset. Otherwise, it looks ugly
             foreach (var rayGo in new[] { _rayGo1, _rayGo2, _rayGo3, _rayGo4 })
             {
-                var rayRenderer = rayGo.GetComponent<CameraToWorldRayRenderer>();
+                var rayRenderer = rayGo.GetComponent<PassthroughCameraSamples.CameraToWorld.CameraToWorldRayRenderer>();
                 foreach (var debugSegment in rayRenderer.m_debugSegments)
                 {
                     debugSegment.SetActive(m_snapshotTaken);

@@ -2293,6 +2293,7 @@ MonoBehaviour:
     m_Reference: {fileID: 5626649582121837198, guid: 0a48e04df3cc7994d99a846408f3e2fc, type: 3}
   _countTextMesh: {fileID: 1423069752}
   _snapshotWaitImage: {fileID: 485986958}
+  _snapshotModeEnum: 0
   _imageCount: 20
   _snapshotTime: 0.1
   _snapshotWaitTime: 0.5
@@ -14729,6 +14730,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _cameraGetImageManager: {fileID: 336067258}
+  _changeSnapshotModeInputActionProperty:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Change Snapshot Mode Input Action Property
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: ba4569d6-ab03-403e-8978-410aecba62c4
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 9323873774541471, guid: 0a48e04df3cc7994d99a846408f3e2fc, type: 3}
   _addSnapshotMaxCountInputActionProperty:
     m_UseReference: 1
     m_Action:
@@ -14777,14 +14790,15 @@ MonoBehaviour:
       m_SingletonActionBindings: []
       m_Flags: 0
     m_Reference: {fileID: -754962700863075682, guid: 0a48e04df3cc7994d99a846408f3e2fc, type: 3}
-  _maxImageCount: 60
-  _minImageCount: 5
-  _defaultImageCount: 20
+  _maxImageCount: 100
+  _minImageCount: 1
+  _defaultImageCount: 30
   _imageCount: 10
   _snapshotWaitTime: 0.5
   _snapshotChangeTime: 0.8
   _snapshotMaxTime: 3
   _snapshotMinTime: 0.25
+  _snapshotModeEnum: 1
 --- !u!1 &2100319873
 GameObject:
   m_ObjectHideFlags: 0

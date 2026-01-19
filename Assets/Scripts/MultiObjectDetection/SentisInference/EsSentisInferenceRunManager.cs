@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Meta.XR;
+using Scripts.Utility;
 using Unity.Collections;
 using Unity.InferenceEngine;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace MultiObjectDetection
 {
@@ -41,6 +44,8 @@ namespace MultiObjectDetection
 
         private IEnumerator Start()
         {
+            m_stopwatch = new Stopwatch();
+
             m_uiInference.SetLabels(m_labelsAsset);
 
             while (true)
@@ -84,12 +89,19 @@ namespace MultiObjectDetection
             Destroy(tempTexture);
         }
 
+        private Stopwatch m_stopwatch;
+
+        private double elapsedMs() => m_stopwatch.Elapsed.TotalMilliseconds;
+
         private IEnumerator RunInference()
         {
             if (!m_cameraAccess.IsPlaying)
             {
                 yield break;
             }
+
+            m_stopwatch.Restart();
+
             var cachedCameraPose = m_cameraAccess.GetCameraPose();
 
             // Update Capture data
@@ -103,23 +115,30 @@ namespace MultiObjectDetection
             // Schedule all model layers
             m_engine.Schedule(input);
 
+            var t0 = elapsedMs();
+
             // Get the results. ReadbackAndCloneAsync waits for all layers to complete before returning the result
             var boxesAwaiter = (m_engine.PeekOutput(0) as Tensor<float>).ReadbackAndCloneAsync().GetAwaiter();
+
             while (!boxesAwaiter.IsCompleted)
             {
                 yield return null;
             }
+
             using var boxes = boxesAwaiter.GetResult();
             if (boxes.shape[0] == 0)
             {
                 yield break;
             }
 
+            var t1 = elapsedMs();
+
             var classIDsAwaiter = (m_engine.PeekOutput(1) as Tensor<int>).ReadbackAndCloneAsync().GetAwaiter();
             while (!classIDsAwaiter.IsCompleted)
             {
                 yield return null;
             }
+
             using var classIDs = classIDsAwaiter.GetResult();
             if (classIDs.shape[0] == 0)
             {
@@ -127,17 +146,20 @@ namespace MultiObjectDetection
                 yield break;
             }
 
+            var t2 = elapsedMs();
             var scoresAwaiter = (m_engine.PeekOutput(2) as Tensor<float>).ReadbackAndCloneAsync().GetAwaiter();
             while (!scoresAwaiter.IsCompleted)
             {
                 yield return null;
             }
+
             using var scores = scoresAwaiter.GetResult();
             if (scores.shape[0] == 0)
             {
                 Debug.LogError("scores.shape[0] == 0");
                 yield break;
             }
+            var t3 = elapsedMs();
 
             NonMaxSuppression(m_detections, boxes, classIDs, scores, m_iouThreshold, m_scoreThreshold);
 
@@ -147,6 +169,11 @@ namespace MultiObjectDetection
                 yield break;
             }
 
+            //Get Text: 10,Get the Results: 200,ClassIDs Awaiter: 0,Sources Awaiter: 0.
+            Debug.Log($"Get Text: {t0}, Get the results: {t1 - t0} ClassIDsAwaiter:{t2 - t1} ScoresAwaiter:{t3 - t2}");
+
+            //0.2f  一秒五帧 还需要再调整快一点
+            IntervalByKey.PrintInterval("DrawUIBoxes");
             // Update UI.
             m_uiInference.DrawUIBoxes(m_detections, m_inputSize, cachedCameraPose);
         }

@@ -405,7 +405,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 224000010550048884, guid: bac85bcbcdc58924f840d203376147c2, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 224000010550048884, guid: bac85bcbcdc58924f840d203376147c2, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1881,6 +1881,10 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1744462754}
+    - target: {fileID: 4039564448534085968, guid: c9ebebff69371114bbe820dd4bef0c7a, type: 3}
+      propertyPath: m_backend
+      value: 512
+      objectReference: {fileID: 0}
     - target: {fileID: 4039564448534085968, guid: c9ebebff69371114bbe820dd4bef0c7a, type: 3}
       propertyPath: m_cameraAccess
       value: 

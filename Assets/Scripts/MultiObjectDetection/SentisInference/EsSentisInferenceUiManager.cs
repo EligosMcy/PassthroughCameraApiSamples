@@ -183,8 +183,6 @@ namespace MultiObjectDetection
                 boxData.Size = size;
                 boxData.lastUpdateTime = Time.time;
             }
-
-            Debug.Log($"Spawn Count: Current: {m_boxDrawn.Count} / Loop: {m_boxPool.Count}");
         }
 
 

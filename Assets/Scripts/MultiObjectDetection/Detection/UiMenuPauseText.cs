@@ -18,18 +18,18 @@ namespace MultiObjectDetection
 
         private void Start()
         {
-            _esDetectionUiMenuManager.onInitialed += _esDetectionUiMenuManager_onInitialed;
+            _esDetectionUiMenuManager.OnInitialed += _esDetectionUiMenuManager_onInitialed;
 
-            _esDetectionUiMenuManager.onNoPermission += _esDetectionUiMenuManager_onNoPermission;
+            _esDetectionUiMenuManager.OnNoPermission += _esDetectionUiMenuManager_onNoPermission;
 
-            _esDetectionUiMenuManager.onWaitChanged += _esDetectionUiMenuManager_onWaitChanged;
+            _esDetectionUiMenuManager.OnWaitChanged += _esDetectionUiMenuManager_onWaitChanged;
 
-            _esDetectionUiMenuManager.onPausechanged += _esDetectionUiMenuManager_onPausechanged;
+            _esDetectionUiMenuManager.OnPauseChanged += esDetectionUiMenuManagerOnPauseChanged;
         }
 
-        private void _esDetectionUiMenuManager_onPausechanged()
+        private void esDetectionUiMenuManagerOnPauseChanged(bool pause)
         {
-            _textMesh.text = "Pause Changed:";
+            _textMesh.text = $"Pause Changed: {pause}";
         }
 
         private void _esDetectionUiMenuManager_onWaitChanged()

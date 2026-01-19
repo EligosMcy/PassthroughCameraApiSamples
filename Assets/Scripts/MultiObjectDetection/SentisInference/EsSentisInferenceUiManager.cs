@@ -74,9 +74,6 @@ namespace MultiObjectDetection
 
             OnObjectsDetected?.Invoke(detections.Count);
 
-            // 获取相机原始纹理
-            Texture2D cameraTexture = getCameraSnapshot(); // 假设m_cameraAccess有获取纹理的方法
-
             // Draw the bounding boxes
             for (var i = 0; i < detections.Count; i++)
             {
@@ -87,6 +84,8 @@ namespace MultiObjectDetection
                     continue;
                 }
 
+                // 获取相机原始纹理
+                Texture2D cameraTexture = getCameraSnapshot(); // 假设m_cameraAccess有获取纹理的方法
 
                 float x1 = detection.boundingBox[0];
                 float y1 = detection.boundingBox[1];
@@ -184,6 +183,8 @@ namespace MultiObjectDetection
                 boxData.Size = size;
                 boxData.lastUpdateTime = Time.time;
             }
+
+            Debug.Log($"Spawn Count: Current: {m_boxDrawn.Count} / Loop: {m_boxPool.Count}");
         }
 
 

@@ -34,21 +34,21 @@ namespace MultiObjectDetection
         public InputActionProperty _inputActionProperty;
 
 
-        public delegate void OnInitialed();
+        public delegate void OnInitialedHandle();
 
-        public event OnInitialed onInitialed;
+        public event OnInitialedHandle OnInitialed;
 
-        public delegate void OnNoPermission();
+        public delegate void OnNoPermissionHandle();
 
-        public event OnNoPermission onNoPermission;
+        public event OnNoPermissionHandle OnNoPermission;
 
-        public delegate void OnPauseChanged();
+        public delegate void OnPauseChangedHandle(bool pause);
 
-        public event OnPauseChanged onPausechanged;
+        public event OnPauseChangedHandle OnPauseChanged;
 
-        public delegate void OnWaitChanged();
+        public delegate void OnWaitChangedHandle();
 
-        public event OnWaitChanged onWaitChanged;
+        public event OnWaitChangedHandle OnWaitChanged;
 
         #region Unity Functions
 
@@ -68,7 +68,7 @@ namespace MultiObjectDetection
                    !OVRPermissionsRequester.IsPermissionGranted(
                        OVRPermissionsRequester.Permission.PassthroughCameraAccess))
             {
-                onWaitChanged?.Invoke();
+                OnWaitChanged?.Invoke();
                 yield return null;
             }
 
@@ -95,7 +95,7 @@ namespace MultiObjectDetection
             m_initialPanel.SetActive(false);
             m_noPermissionPanel.SetActive(true);
 
-            onNoPermission?.Invoke();
+            OnNoPermission?.Invoke();
         }
 
         #endregion
@@ -109,7 +109,7 @@ namespace MultiObjectDetection
             m_initialPanel.SetActive(true);
             m_noPermissionPanel.SetActive(false);
 
-            onInitialed?.Invoke();
+            OnInitialed?.Invoke();
         }
 
 
@@ -122,7 +122,7 @@ namespace MultiObjectDetection
             m_noPermissionPanel.SetActive(false);
 
             OnPause?.Invoke(visible);
-            onPausechanged?.Invoke();
+            OnPauseChanged?.Invoke(visible);
         }
 
         #endregion

@@ -32,6 +32,7 @@ namespace MultiObjectDetection
 
         private Worker m_engine;
         private Vector2Int m_inputSize;
+        private Tensor<float> _input;
         private readonly List<(int classId, Vector4 boundingBox)> m_detections = new List<(int classId, Vector4 boundingBox)>();
 
         private void Awake()
@@ -40,6 +41,8 @@ namespace MultiObjectDetection
             var inputShape = model.inputs[0].shape;
             m_inputSize = new Vector2Int(inputShape.Get(2), inputShape.Get(3));
             m_engine = new Worker(model, m_backend);
+
+            _input = new Tensor<float>(new TensorShape(1, 3, m_inputSize.x, m_inputSize.y));
         }
 
         private IEnumerator Start()
@@ -109,11 +112,10 @@ namespace MultiObjectDetection
 
             // Convert the texture to a Tensor and schedule the inference
             var textureTransform = new TextureTransform().SetDimensions(targetTexture.width, targetTexture.height, 3);
-            using var input = new Tensor<float>(new TensorShape(1, 3, m_inputSize.x, m_inputSize.y));
-            TextureConverter.ToTensor(targetTexture, input, textureTransform);
+            TextureConverter.ToTensor(targetTexture, _input, textureTransform);
 
             // Schedule all model layers
-            m_engine.Schedule(input);
+            m_engine.Schedule(_input);
 
             var t0 = elapsedMs();
 
@@ -134,6 +136,7 @@ namespace MultiObjectDetection
             var t1 = elapsedMs();
 
             var classIDsAwaiter = (m_engine.PeekOutput(1) as Tensor<int>).ReadbackAndCloneAsync().GetAwaiter();
+
             while (!classIDsAwaiter.IsCompleted)
             {
                 yield return null;
@@ -176,6 +179,8 @@ namespace MultiObjectDetection
             IntervalByKey.PrintInterval("DrawUIBoxes");
             // Update UI.
             m_uiInference.DrawUIBoxes(m_detections, m_inputSize, cachedCameraPose);
+
+            IntervalByKey.PrintInterval("DrawUIBoxesCompleted");
         }
 
         private static void NonMaxSuppression(List<(int classId, Vector4 boundingBox)> outDetections, Tensor<float> boxes, Tensor<int> classIDs, Tensor<float> scores, float iouThreshold, float scoreThreshold)

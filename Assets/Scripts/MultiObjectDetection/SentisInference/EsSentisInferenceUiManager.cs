@@ -3,6 +3,7 @@ using Meta.XR;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace MultiObjectDetection
 {
@@ -35,7 +36,6 @@ namespace MultiObjectDetection
         {
             public string ClassName;
             public int ClassId;
-            public RectTransform BoxRectTransform;
             public EsDetectionCanvasMaker CanvasMaker;
             public float lastUpdateTime;
             public Vector2 Size;
@@ -62,7 +62,7 @@ namespace MultiObjectDetection
             m_labels = labelsAsset.text.Split('\n');
         }
 
-        public void DrawUIBoxes(List<(int classId, Vector4 boundingBox)> detections, Vector2 inputSize, Pose cameraPose)
+        public void DrawUIBoxes(List<(int classId, Vector4 boundingBox)> detections, Texture targetTexture, Vector2 inputSize, Pose cameraPose)
         {
             Vector2 currentResolution = m_cameraAccess.CurrentResolution;
 
@@ -83,9 +83,6 @@ namespace MultiObjectDetection
                 {
                     continue;
                 }
-
-                // 获取相机原始纹理
-                Texture2D cameraTexture = getCameraSnapshot(); // 假设m_cameraAccess有获取纹理的方法
 
                 float x1 = detection.boundingBox[0];
                 float y1 = detection.boundingBox[1];
@@ -133,12 +130,66 @@ namespace MultiObjectDetection
 
                 var boxData = GetOrCreateBoundingBoxData(detection.classId, worldSpaceCenter, size);
 
-                var boxRectTransform = boxData.BoxRectTransform;
+                var boxRectTransform = boxData.CanvasMaker.CanvasMakerRectTransform;
                 boxRectTransform.GetComponentInChildren<Text>().text = $"Id: {detection.classId} Class: {classname} Center (px): {center:0.0} Center (%): {normalizedCenter:0.0}";
                 boxRectTransform.SetPositionAndRotation(worldSpaceCenter, Quaternion.LookRotation(normal));
-                boxRectTransform.sizeDelta = size;
 
+                var imageRectTransform = boxData.CanvasMaker.ImageMakerRectTransform;
+                imageRectTransform.sizeDelta = size;
+
+                // 1) 构造平面（法线来自世界中心指向相机的反方向已归一化）
+                var reallyplane = new Plane(normal, worldSpaceCenter);
+
+                // 2) 计算四个角的 Viewport 坐标
+                Vector2 vpBL = normRect.min;                        // (xMin, yMin)
+                Vector2 vpTR = normRect.max;                        // (xMax, yMax)
+                Vector2 vpTL = new Vector2(vpBL.x, vpTR.y);         // (xMin, yMax)
+                Vector2 vpBR = new Vector2(vpTR.x, vpBL.y);         // (xMax, yMin)
+
+                // 3) 四角射线
+                var rayBL = m_cameraAccess.ViewportPointToRay(vpBL, cameraPose);
+                var rayTL = m_cameraAccess.ViewportPointToRay(vpTL, cameraPose);
+                var rayTR = m_cameraAccess.ViewportPointToRay(vpTR, cameraPose);
+                var rayBR = m_cameraAccess.ViewportPointToRay(vpBR, cameraPose);
+
+                // 4) 射线与平面求交
+                Vector3 pBL = default, pTL = default, pTR = default, pBR = default;
+                if (reallyplane.Raycast(rayBL, out float dBL)) pBL = rayBL.GetPoint(dBL);
+                if (reallyplane.Raycast(rayTL, out float dTL)) pTL = rayTL.GetPoint(dTL);
+                if (reallyplane.Raycast(rayTR, out float dTR)) pTR = rayTR.GetPoint(dTR);
+                if (reallyplane.Raycast(rayBR, out float dBR)) pBR = rayBR.GetPoint(dBR);
+
+                // 现在就有四个世界坐标点（按屏幕顺序：TL, TR, BR, BL）
+                Vector3[] worldQuad = new[] { pTL, pTR, pBR, pBL };
+
+                // 可选：计算在该“物体平面”内的宽高（世界单位）
+                var camRightWS = (cameraPose.rotation * Vector3.right).normalized;
+                var camUpWS = (cameraPose.rotation * Vector3.up).normalized;
+                // 用四点在平面内投影估计宽/高（取平均更稳健）
+                float worldWidth = (Vector3.ProjectOnPlane(pTR - pTL, normal).magnitude
+                                    + Vector3.ProjectOnPlane(pBR - pBL, normal).magnitude) * 0.5f;
+                float worldHeight = (Vector3.ProjectOnPlane(pTL - pBL, normal).magnitude
+                                     + Vector3.ProjectOnPlane(pTR - pBR, normal).magnitude) * 0.5f;
+
+                Debug.Log($"Set Out Line: {worldQuad[0]} {worldQuad[1]} {worldQuad[2]} {worldQuad[3]} - worldSpaceCenter{worldSpaceCenter}");
+
+                boxData.CanvasMaker.SetOutLine(worldQuad);
                 //
+
+                // 获取相机原始纹理
+                Texture2D cameraTexture = null;
+                //RenderTexture
+                if (targetTexture is RenderTexture rt)
+                {
+                    Debug.Log("Is RenderTexture");
+                    cameraTexture = readFromRT(rt, false);
+                }
+                else
+                {
+                    Debug.Log("Other Texture");
+                    cameraTexture = getCameraSnapshot();
+                }
+
                 // === 新增：截取识别区域的纹理 ===
                 if (cameraTexture != null)
                 {
@@ -179,12 +230,21 @@ namespace MultiObjectDetection
                 }
                 // === 截取结束 ===
 
-                //
                 boxData.Size = size;
                 boxData.lastUpdateTime = Time.time;
             }
         }
 
+        private Texture2D readFromRT(RenderTexture rt, bool linear)
+        {
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false, linear);
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            tex.Apply(false, false);
+            RenderTexture.active = prev;
+            return tex;
+        }
 
         private Texture2D getCameraSnapshot()
         {
@@ -205,7 +265,7 @@ namespace MultiObjectDetection
             for (int i = m_boxDrawn.Count - 1; i >= 0; i--)
             {
                 var box = m_boxDrawn[i];
-                var localPos = box.BoxRectTransform.InverseTransformPoint(worldSpaceCenter);
+                var localPos = box.CanvasMaker.CanvasMakerRectTransform.InverseTransformPoint(worldSpaceCenter);
                 var newBox = new Vector4(
                     localPos.x - worldSpaceSize.x * 0.5f,
                     localPos.y - worldSpaceSize.y * 0.5f,
@@ -213,7 +273,7 @@ namespace MultiObjectDetection
                     localPos.y + worldSpaceSize.y * 0.5f
                 );
 
-                var sizeDelta = box.BoxRectTransform.sizeDelta;
+                var sizeDelta = box.CanvasMaker.ImageMakerRectTransform.sizeDelta;
                 var currentBox = new Vector4(
                     -sizeDelta.x * 0.5f,
                     -sizeDelta.y * 0.5f,
@@ -264,19 +324,15 @@ namespace MultiObjectDetection
             if (m_boxPool.Count > 0)
             {
                 var pooled = m_boxPool[m_boxPool.Count - 1];
-                pooled.BoxRectTransform.gameObject.SetActive(true);
+                pooled.CanvasMaker.gameObject.SetActive(true);
                 m_boxPool.RemoveAt(m_boxPool.Count - 1);
                 return pooled;
             }
 
             var canvasMaker = Instantiate(m_canvasMaker, _contentParent);
-            var boxRectTransform = canvasMaker.CanvasMakerRectTransform;
 
-
-            boxRectTransform.gameObject.SetActive(true);
             return new BoundingBoxData
             {
-                BoxRectTransform = boxRectTransform,
                 CanvasMaker = canvasMaker,
             };
         }
@@ -285,7 +341,7 @@ namespace MultiObjectDetection
 
         private void ReturnToPool(BoundingBoxData box)
         {
-            box.BoxRectTransform.gameObject.SetActive(false);
+            box.CanvasMaker.gameObject.SetActive(false);
             m_boxPool.Add(box);
         }
 

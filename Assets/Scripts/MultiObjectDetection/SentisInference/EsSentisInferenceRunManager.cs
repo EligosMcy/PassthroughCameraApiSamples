@@ -178,7 +178,7 @@ namespace MultiObjectDetection
             //0.2f  一秒五帧 还需要再调整快一点
             IntervalByKey.PrintInterval("DrawUIBoxes");
             // Update UI.
-            m_uiInference.DrawUIBoxes(m_detections, m_inputSize, cachedCameraPose);
+            m_uiInference.DrawUIBoxes(m_detections, targetTexture, m_inputSize, cachedCameraPose);
 
             IntervalByKey.PrintInterval("DrawUIBoxesCompleted");
         }

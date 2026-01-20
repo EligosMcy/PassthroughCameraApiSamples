@@ -220,7 +220,7 @@ namespace MultiObjectDetection
             {
                 if (!HasExistingMarkerInBoundingBox(box))
                 {
-                    var marker = Instantiate(m_spawnMarker, box.BoxRectTransform.position, box.BoxRectTransform.rotation, m_uiInference.ContentParent);
+                    var marker = Instantiate(m_spawnMarker, box.CanvasMaker.CanvasMakerRectTransform.position, box.CanvasMaker.CanvasMakerRectTransform.rotation, m_uiInference.ContentParent);
                     marker.GetComponent<EsDetectionSpawnMarkerAnim>().SetYoloClassName(box.ClassName);
 
                     m_spawnedEntities.Add(marker);
@@ -244,8 +244,8 @@ namespace MultiObjectDetection
                     if (marker.GetYoloClassName() == box.ClassName)
                     {
                         var markerWorldPos = marker.transform.position;
-                        Vector2 localPos = box.BoxRectTransform.InverseTransformPoint(markerWorldPos);
-                        var sizeDelta = box.BoxRectTransform.sizeDelta;
+                        Vector2 localPos = box.CanvasMaker.CanvasMakerRectTransform.InverseTransformPoint(markerWorldPos);
+                        var sizeDelta = box.CanvasMaker.ImageMakerRectTransform.sizeDelta;
                         var currentBox = new Rect(
                             -sizeDelta.x * 0.5f,
                             -sizeDelta.y * 0.5f,

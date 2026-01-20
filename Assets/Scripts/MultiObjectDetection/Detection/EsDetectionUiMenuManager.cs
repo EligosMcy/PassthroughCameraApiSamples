@@ -33,7 +33,6 @@ namespace MultiObjectDetection
 
         public InputActionProperty _inputActionProperty;
 
-
         public delegate void OnInitialedHandle();
 
         public event OnInitialedHandle OnInitialed;
@@ -80,14 +79,14 @@ namespace MultiObjectDetection
             if (m_initialMenu)
             {
                 m_buttonSound?.Play();
-                OnPauseMenu(false);
+
+                OnPauseMenu(!IsPaused);
             }
         }
 
         #endregion
 
         #region Ui state: No permissions Menu
-
         private void OnNoPermissionMenu()
         {
             m_initialMenu = false;
@@ -112,10 +111,8 @@ namespace MultiObjectDetection
             OnInitialed?.Invoke();
         }
 
-
         private void OnPauseMenu(bool visible)
         {
-            m_initialMenu = false;
             IsPaused = visible;
 
             m_initialPanel.SetActive(false);

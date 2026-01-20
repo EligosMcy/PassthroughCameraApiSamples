@@ -11,7 +11,9 @@ namespace MultiObjectDetection
         [SerializeField] private PassthroughCameraAccess m_cameraAccess;
 
         [Header("Controls configuration")]
-        [SerializeField] private OVRInput.RawButton m_actionButton = OVRInput.RawButton.A;
+        [SerializeField] private OVRInput.RawButton m_spawnActionButton = OVRInput.RawButton.A;
+
+        [SerializeField] private OVRInput.RawButton m_clearActionButton = OVRInput.RawButton.B;
 
         [Header("Placement configuration")]
         [SerializeField]
@@ -63,16 +65,17 @@ namespace MultiObjectDetection
             else
             {
                 // Press A button to spawn 3d markers
-                if (OVRInput.GetUp(m_actionButton))
+                if (OVRInput.GetUp(m_spawnActionButton))
                 {
-                    SpawnCurrentDetectedObjects();
+                    // SpawnCurrentDetectedObjects();
                 }
             }
 
+
             // Press B button to clean all markers
-            if (OVRInput.GetDown(OVRInput.RawButton.B))
+            if (OVRInput.GetDown(m_clearActionButton))
             {
-                CleanMarkers();
+                // CleanMarkers();
             }
         }
 

@@ -100,6 +100,7 @@ namespace MultiObjectDetection
                 // Get the 3D marker world position using Depth Raycast
                 var ray = m_cameraAccess.ViewportPointToRay(new Vector2(normalizedCenter.x, 1.0f - normalizedCenter.y), cameraPose);
                 var worldPos = m_environmentRaycast.Raycast(ray);
+
                 var normRect = new Rect(
                     rect.x / inputSize.x,
                     1f - rect.yMax / inputSize.y,
@@ -109,6 +110,7 @@ namespace MultiObjectDetection
 
                 // Calculate distance and center point first
                 float distance = worldPos.HasValue ? Vector3.Distance(cameraPose.position, worldPos.Value) : 1f;
+
                 var worldSpaceCenter = m_cameraAccess.ViewportPointToRay(normRect.center, cameraPose).GetPoint(distance);
                 var normal = (worldSpaceCenter - cameraPose.position).normalized;
 
@@ -162,19 +164,38 @@ namespace MultiObjectDetection
                 // 现在就有四个世界坐标点（按屏幕顺序：TL, TR, BR, BL）
                 Vector3[] worldQuad = new[] { pTL, pTR, pBR, pBL };
 
-                // 可选：计算在该“物体平面”内的宽高（世界单位）
-                var camRightWS = (cameraPose.rotation * Vector3.right).normalized;
-                var camUpWS = (cameraPose.rotation * Vector3.up).normalized;
-                // 用四点在平面内投影估计宽/高（取平均更稳健）
-                float worldWidth = (Vector3.ProjectOnPlane(pTR - pTL, normal).magnitude
-                                    + Vector3.ProjectOnPlane(pBR - pBL, normal).magnitude) * 0.5f;
-                float worldHeight = (Vector3.ProjectOnPlane(pTL - pBL, normal).magnitude
-                                     + Vector3.ProjectOnPlane(pTR - pBR, normal).magnitude) * 0.5f;
-
                 Debug.Log($"Set Out Line: {worldQuad[0]} {worldQuad[1]} {worldQuad[2]} {worldQuad[3]} - worldSpaceCenter{worldSpaceCenter}");
 
                 boxData.CanvasMaker.SetOutLine(worldQuad);
                 //
+                // 2) 构建平面内坐标轴（先做一次平面投影，避免测量噪声带来的法线分量干扰）
+                Vector3 xApprox = Vector3.ProjectOnPlane(pTR - pTL, normal); // 右向（TL->TR）
+                Vector3 yApprox = Vector3.ProjectOnPlane(pTL - pBL, normal); // 上向（BL->TL）
+
+                // 3) 正交化并保证右手系：z=normal, x=normalize(cross(y,z)), y=normalize(cross(z,x))
+                Vector3 zAxis = normal.sqrMagnitude > 0 ? normal.normalized : Vector3.forward;
+                Vector3 xAxis = Vector3.Cross(yApprox, zAxis);
+                if (xAxis.sqrMagnitude < 1e-8f)
+                {
+                    // 退化处理：若 TL-TR 与 T-B 接近共线，尝试用另一条边
+                    xApprox = Vector3.ProjectOnPlane(pBR - pBL, zAxis);
+                    xAxis = Vector3.Cross(yApprox, zAxis);
+                }
+                xAxis = xAxis.normalized;
+
+                Vector3 yAxis = Vector3.Cross(zAxis, xAxis).normalized;
+
+                // 4) 生成旋转（LookRotation 的第一个参数是 forward，这里用 zAxis；第二个参数是 up，用 yAxis）
+                Quaternion worldRot = Quaternion.LookRotation(zAxis, yAxis);
+
+
+                Quaternion localRotFull = Quaternion.Inverse(boxData.CanvasMaker.CanvasMakerRectTransform.rotation) * worldRot;
+
+                // 新计算得到的目标 local yaw（Z）
+                Vector3 targetEuler = new Vector3(0, 0, localRotFull.eulerAngles.z);
+
+                // 5) 应用到 RectTransform（World Space Canvas）
+                boxData.CanvasMaker.ImageMakerRectTransform.localEulerAngles = targetEuler;
 
                 // 获取相机原始纹理
                 Texture2D cameraTexture = null;
@@ -193,21 +214,13 @@ namespace MultiObjectDetection
                 // === 新增：截取识别区域的纹理 ===
                 if (cameraTexture != null)
                 {
-                    // 计算归一化边界框（注意Y轴翻转）
-                    Rect normCropRect = new Rect(
-                        x: rect.x / inputSize.x,
-                        y: 1.0f - (rect.y + rect.height) / inputSize.y, // Unity纹理坐标原点在左下
-                        width: rect.width / inputSize.x,
-                        height: rect.height / inputSize.y
-                    );
-
                     // 转换为像素坐标
                     int texWidth = cameraTexture.width;
                     int texHeight = cameraTexture.height;
-                    int cropX = (int)(normCropRect.x * texWidth);
-                    int cropY = (int)(normCropRect.y * texHeight);
-                    int cropWidth = (int)(normCropRect.width * texWidth);
-                    int cropHeight = (int)(normCropRect.height * texHeight);
+                    int cropX = (int)(normRect.x * texWidth);
+                    int cropY = (int)(normRect.y * texHeight);
+                    int cropWidth = (int)(normRect.width * texWidth);
+                    int cropHeight = (int)(normRect.height * texHeight);
 
                     // 确保不越界
                     cropX = Mathf.Clamp(cropX, 0, texWidth - 1);
